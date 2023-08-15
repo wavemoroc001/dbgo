@@ -10,4 +10,5 @@ func Register(r *gin.Engine) {
 	r.GET("/wallets/:id", wallet.GetWalletByID)
 	r.GET("/wallets/:id/balance", wallet.GetBalanceByID)
 	r.POST("/wallets/:id/deposit", wallet.DepositByID)
+	r.POST("/wallets/:id/withdraw", wallet.WithdrawByID)
 }

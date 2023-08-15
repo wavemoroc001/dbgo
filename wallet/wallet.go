@@ -21,6 +21,10 @@ type BalanceResponse struct {
 	Balance float64 `json:"balance"`
 }
 
-type BalanceRequest struct {
-	Balance float64 `json:"balance"`
+type DepositRequest struct {
+	Amount float64 `json:"amount"`
+}
+
+type WithdrawRequest struct {
+	Amount float64 `json:"amount"`
 }

@@ -1,7 +1,6 @@
 package wallet
 
 import (
-	"database/sql"
 	"dbgo/db"
 	"log"
 )
@@ -34,11 +33,11 @@ func updateWalletBalance(walletID int, newBalance float64) error {
 	return nil
 }
 
-func deleteWallet(db *sql.DB, walletID int) error {
+func deleteWallet(walletID int) error {
 	query := `
 			DELETE FROM wallet WHERE id = $1
 	`
-	_, err := db.Exec(query, walletID)
+	_, err := db.Conn.Exec(query, walletID)
 	if err != nil {
 		return err
 	}
@@ -52,17 +51,14 @@ func GetWalletById(walletID int) (Wallet, error) {
 			FROM wallet w WHERE id = $1
 	`
 	row := db.Conn.QueryRow(query, walletID)
-	var id int
-	var owner string
-	var balance float64
-	err := row.Scan(&id, &owner, &balance)
+
 	var wal Wallet
+
+	err := row.Scan(&wal.ID, &wal.Owner, &wal.Balance)
 	if err != nil {
 		log.Println("can not parse wallet to struct")
 		return wal, err
 	}
-	wal.ID = id
-	wal.Balance = balance
-	wal.Owner = owner
+
 	return wal, nil
 }
