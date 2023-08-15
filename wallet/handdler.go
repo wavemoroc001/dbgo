@@ -8,14 +8,24 @@ import (
 	"strconv"
 )
 
-func SaveWallet(c *gin.Context) {
+type Handler struct {
+	repo *Repo
+}
+
+func ProvideHandler(repo *Repo) *Handler {
+	return &Handler{
+		repo: repo,
+	}
+}
+
+func (w *Handler) SaveWallet(c *gin.Context) {
 	var req SaveWalletRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{
 			"message": "can not parse request",
 		})
 	}
-	id, err := InsertWallet(req.Owner, req.Balance)
+	id, err := w.repo.InsertWallet(req.Owner, req.Balance)
 	if err != nil {
 		log.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -31,7 +41,7 @@ func SaveWallet(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
-func GetWalletByID(c *gin.Context) {
+func (w *Handler) GetWalletByID(c *gin.Context) {
 	pathID := c.Param("id")
 	accID, err := strconv.Atoi(pathID)
 	if err != nil {
@@ -40,7 +50,7 @@ func GetWalletByID(c *gin.Context) {
 		})
 		return
 	}
-	wallet, err := GetWalletById(accID)
+	wallet, err := w.repo.GetWalletById(accID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
@@ -53,7 +63,7 @@ func GetWalletByID(c *gin.Context) {
 	c.JSON(http.StatusOK, wallet)
 }
 
-func GetBalanceByID(c *gin.Context) {
+func (w *Handler) GetBalanceByID(c *gin.Context) {
 	pathID := c.Param("id")
 	accID, err := strconv.Atoi(pathID)
 	if err != nil {
@@ -62,7 +72,7 @@ func GetBalanceByID(c *gin.Context) {
 		})
 		return
 	}
-	wallet, err := GetWalletById(accID)
+	wallet, err := w.repo.GetWalletById(accID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
@@ -73,7 +83,7 @@ func GetBalanceByID(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-func DepositByID(c *gin.Context) {
+func (w *Handler) DepositByID(c *gin.Context) {
 	pathID := c.Param("id")
 	accID, err := strconv.Atoi(pathID)
 	if err != nil {
@@ -90,7 +100,7 @@ func DepositByID(c *gin.Context) {
 		return
 	}
 
-	wal, err := GetWalletById(accID)
+	wal, err := w.repo.GetWalletById(accID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Errorf("can not get wallet %w", err),
@@ -106,7 +116,7 @@ func DepositByID(c *gin.Context) {
 	}
 
 	newBalance := req.Amount + wal.Balance
-	if err := updateWalletBalance(accID, newBalance); err != nil {
+	if err := w.repo.UpdateWalletBalance(accID, newBalance); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Errorf("can not update balance cause %w", err),
 		})
@@ -120,7 +130,7 @@ func DepositByID(c *gin.Context) {
 
 }
 
-func WithdrawByID(c *gin.Context) {
+func (w *Handler) WithdrawByID(c *gin.Context) {
 	pathID := c.Param("id")
 	accID, err := strconv.Atoi(pathID)
 	if err != nil {
@@ -136,7 +146,7 @@ func WithdrawByID(c *gin.Context) {
 		})
 	}
 
-	wal, err := GetWalletById(accID)
+	wal, err := w.repo.GetWalletById(accID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Errorf("can not get wallet by id: %w", err),
@@ -159,7 +169,7 @@ func WithdrawByID(c *gin.Context) {
 	}
 
 	newBalance := wal.Balance - req.Amount
-	if err := updateWalletBalance(accID, newBalance); err != nil {
+	if err := w.repo.UpdateWalletBalance(accID, newBalance); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": fmt.Errorf("can not update balance cause %w", err),
 		})

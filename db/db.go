@@ -5,11 +5,8 @@ import (
 	"log"
 )
 
-var Conn *sql.DB
-
 func ProvideDBCon() (*sql.DB, func()) {
 	conn, err := sql.Open("postgres", "postgresql://admin:admin123@localhost:5432/testdb?sslmode=disable")
-	//defer conn.Close()
 	if err != nil {
 		log.Fatal(err)
 	}
